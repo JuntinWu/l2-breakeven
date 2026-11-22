@@ -51,6 +51,9 @@ dd{margin:0;font-weight:700;font-variant-numeric:tabular-nums}
 .vs{color:var(--accent2-700)}
 .nowrap{white-space:nowrap}
 .note{margin:30px 0 0;max-width:42em;font-size:14px;line-height:1.7;color:var(--n600);text-wrap:pretty}
+#etfSeg button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:8px 16px;text-align:left}
+#etfSeg b{font-size:18px;font-variant-numeric:tabular-nums}
+#etfSeg small{font-size:12px;opacity:.85}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -67,13 +70,21 @@ dd{margin:0;font-weight:700;font-variant-numeric:tabular-nums}
 
   <div class="grid">
     <form id="f" novalidate>
-      <div class="field"><label for="cost">您的正二成本</label><input id="cost" type="number" inputmode="decimal" step="0.01" value="41.94"></div>
-      <div class="field"><label for="price">今天收盤價</label><input id="price" type="number" inputmode="decimal" step="0.01" value="21.24"></div>
+      <div class="field">
+        <span class="lbl" id="etf-lbl">選擇正二</span>
+        <div class="seg" id="etfSeg" role="group" aria-labelledby="etf-lbl">
+          <button type="button" data-etf="00631L" aria-pressed="true"><b>00631L</b><small>元大台灣50正2</small></button>
+          <button type="button" data-etf="00685L" aria-pressed="false"><b>00685L</b><small>群益臺灣加權正2</small></button>
+        </div>
+        <span class="hint" id="etfHint"></span>
+      </div>
+      <div class="field"><label for="cost">您的 <span class="etfName">00631L</span> 成本</label><input id="cost" type="number" inputmode="decimal" step="0.01" value="41.94"></div>
+      <div class="field"><label for="price"><span class="etfName">00631L</span> 今天收盤價</label><input id="price" type="number" inputmode="decimal" step="0.01" value="21.24"></div>
       <div class="field"><label for="idx">今日大盤收盤點數</label><input id="idx" type="number" inputmode="decimal" step="0.01" value="36033.29"></div>
       <div class="field"><label for="high">區間最高點 <span class="hint">（選填，用來比較）</span></label><input id="high" type="number" inputmode="decimal" step="0.01" value="49969"></div>
       <div class="field">
         <span class="lbl" id="mode-lbl">上漲情境</span>
-        <div class="seg" role="group" aria-labelledby="mode-lbl">
+        <div class="seg" id="modeSeg" role="group" aria-labelledby="mode-lbl">
           <button type="button" data-mode="slow" aria-pressed="true">緩步上漲</button>
           <button type="button" data-mode="fast" aria-pressed="false">一口氣上漲</button>
         </div>
@@ -88,12 +99,12 @@ dd{margin:0;font-weight:700;font-variant-numeric:tabular-nums}
           <span class="tag" id="already" hidden>已經回本了</span>
         </div>
         <dl>
-          <div><dt>正二需上漲</dt><dd id="etfUp"></dd></div>
+          <div><dt><span class="etfName">00631L</span> 需上漲</dt><dd id="etfUp"></dd></div>
           <div><dt>大盤需上漲</dt><dd id="idxUp"></dd></div>
           <div id="highRow"><dt>較區間最高點 <span class="nowrap"><span id="highFmt"></span> 點</span></dt><dd class="vs" id="vsHigh"></dd></div>
         </dl>
       </div>
-      <p id="bad" hidden style="margin:0;font-size:18px;color:var(--n700)">請輸入大於 0 的成本、收盤價與大盤點數。</p>
+      <p id="bad" hidden style="margin:0;font-size:18px;color:var(--n700)">請輸入大於 0 的成本、收盤價與大盤點數。（切換時兩檔的成本與收盤價會各自記住）</p>
     </section>
   </div>
 
@@ -125,15 +136,36 @@ dd{margin:0;font-weight:700;font-variant-numeric:tabular-nums}
     $('highRow').hidden=!hasHigh;
     if(hasHigh){var vs=target/h-1;$('highFmt').textContent=n0(h);$('vsHigh').textContent=(vs>=0?'+':'')+(vs*100).toFixed(1)+'%';}
   }
-  ['cost','price','idx','high'].forEach(function(id){$(id).addEventListener('input',render)});
-  document.querySelectorAll('.seg button').forEach(function(b){
-    b.addEventListener('click',function(){
-      mode=b.dataset.mode;
-      document.querySelectorAll('.seg button').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false')});
-      render();
-    });
+  var KEY='l2-breakeven-v1';
+  var ETFS={
+    '00631L':{hint:'元大台灣50正2，追蹤臺灣50指數 2 倍；以加權指數估算為近似值。',cost:'41.94',price:'21.24'},
+    '00685L':{hint:'群益臺灣加權正2，追蹤臺灣加權指數 2 倍。',cost:'',price:''}
+  };
+  var st={etf:'00631L',vals:{},idx:$('idx').value,high:$('high').value};
+  try{var saved=JSON.parse(localStorage.getItem(KEY)||'null');if(saved)st=Object.assign(st,saved);}catch(e){}
+  Object.keys(ETFS).forEach(function(k){if(!st.vals[k])st.vals[k]={cost:ETFS[k].cost,price:ETFS[k].price};});
+  if(!ETFS[st.etf])st.etf='00631L';
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(st));}catch(e){}}
+  function pressSeg(seg,b){seg.querySelectorAll('button').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false')});}
+  function applyEtf(){
+    var v=st.vals[st.etf];
+    $('cost').value=v.cost;$('price').value=v.price;$('idx').value=st.idx;$('high').value=st.high;
+    $('cost').placeholder=$('price').placeholder=st.etf==='00685L'?'輸入 00685L 價格':'';
+    document.querySelectorAll('.etfName').forEach(function(s){s.textContent=st.etf});
+    $('etfHint').textContent=ETFS[st.etf].hint;
+    pressSeg($('etfSeg'),$('etfSeg').querySelector('[data-etf="'+st.etf+'"]'));
+    document.title=st.etf+' 正二回本計算機';
+    render();
+  }
+  ['cost','price'].forEach(function(id){$(id).addEventListener('input',function(){st.vals[st.etf][id]=$(id).value;save();render();})});
+  ['idx','high'].forEach(function(id){$(id).addEventListener('input',function(){st[id]=$(id).value;save();render();})});
+  $('etfSeg').querySelectorAll('button').forEach(function(b){
+    b.addEventListener('click',function(){st.etf=b.dataset.etf;save();applyEtf();});
   });
-  render();
+  $('modeSeg').querySelectorAll('button').forEach(function(b){
+    b.addEventListener('click',function(){mode=b.dataset.mode;pressSeg($('modeSeg'),b);render();});
+  });
+  applyEtf();
 })();
 </script>
 </body>
