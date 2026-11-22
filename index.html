@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>正二回本計算機</title>
+<meta name="description" content="輸入你的正二成本與今天的收盤數字，算出大盤大約要漲到幾點，你的正二才會回本。">
+<meta property="og:title" content="正二回本計算機">
+<meta property="og:description" content="算出大盤大約要漲到幾點，你的正二才會回本。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%230088b0'/%3E%3Ctext x='50' y='64' text-anchor='middle' font-family='serif' font-size='38' font-weight='700' fill='%23f3f2f2'%3E正二%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;600;700&family=Noto+Serif+TC:wght@400;600;700;900&display=swap">
+<style>
+:root{
+  --bg:#f3f2f2;--surface:#eae9e9;--text:#201e1d;--accent:#0088b0;
+  --accent-100:#e9f8ff;--accent-700:#006786;--accent-800:#004961;--accent2-700:#aa0b56;
+  --n600:#6f6b6b;--n700:#605d5d;--divider:color-mix(in srgb,#201e1d 16%,transparent);
+  --font:"Source Serif 4","Noto Serif TC",serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);-webkit-text-size-adjust:100%}
+.wrap{max-width:1040px;margin:0 auto;padding:30px 16px}
+.rule-top{border-top:4px solid var(--text);border-bottom:1px solid var(--text);height:3px}
+.masthead{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;font-size:13px;letter-spacing:.06em;margin:10px 0}
+.rule{border-top:1px solid var(--text)}
+h1{font-weight:900;font-size:clamp(40px,8vw,72px);line-height:1.05;margin:30px 0 10px;letter-spacing:.02em}
+.lead{margin:0;font-size:18px;max-width:34em;color:var(--n700);text-wrap:pretty}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:30px;margin-top:30px;align-items:start}
+form,.result{display:flex;flex-direction:column;gap:20px}
+.field{display:flex;flex-direction:column;gap:5px}
+label,.lbl{font-size:15px}
+.hint{color:var(--n600);font-size:13px}
+input{width:100%;min-height:52px;padding:6px 10px;font:inherit;font-size:24px;font-variant-numeric:tabular-nums;color:var(--text);caret-color:var(--accent);background:var(--surface);border:1px solid var(--divider);border-radius:2px;-moz-appearance:textfield}
+input:hover{border-color:color-mix(in srgb,var(--text) 45%,transparent)}
+input:focus-visible{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent)}
+input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.seg{display:inline-flex;align-self:flex-start;border:1px solid var(--divider);border-radius:2px;overflow:hidden}
+.seg button{background:transparent;color:var(--text);border:none;font:inherit;font-size:15px;padding:8px 16px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--divider)}
+.seg button[aria-pressed="true"]{background:var(--accent-700);color:var(--bg)}
+.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.target-lbl{font-size:15px;color:var(--n700)}
+.target-row{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.target{font-weight:700;font-size:clamp(56px,10vw,88px);line-height:1.4;color:var(--accent-700);font-variant-numeric:tabular-nums}
+.unit{font-size:28px;font-weight:700}
+.tag{display:inline-flex;align-self:flex-start;font-size:13px;padding:3px 10px;border-radius:2px;background:var(--accent-100);color:var(--accent-800);margin-top:5px}
+dl{margin:15px 0 0;display:flex;flex-direction:column;gap:15px;font-size:18px}
+dl>div{display:flex;justify-content:space-between;gap:15px}
+dd{margin:0;font-weight:700;font-variant-numeric:tabular-nums}
+.vs{color:var(--accent2-700)}
+.nowrap{white-space:nowrap}
+.note{margin:30px 0 0;max-width:42em;font-size:14px;line-height:1.7;color:var(--n600);text-wrap:pretty}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="rule-top"></div>
+    <div class="masthead"><span>正二回本計算機</span><span id="today"></span></div>
+    <div class="rule"></div>
+  </header>
+
+  <h1>正二回本計算機</h1>
+  <p class="lead">輸入你的正二成本與今天的收盤數字，算出大盤大約要漲到幾點，你的正二才會回本。</p>
+
+  <div class="grid">
+    <form id="f" novalidate>
+      <div class="field"><label for="cost">您的正二成本</label><input id="cost" type="number" inputmode="decimal" step="0.01" value="41.94"></div>
+      <div class="field"><label for="price">今天收盤價</label><input id="price" type="number" inputmode="decimal" step="0.01" value="21.24"></div>
+      <div class="field"><label for="idx">今日大盤收盤點數</label><input id="idx" type="number" inputmode="decimal" step="0.01" value="36033.29"></div>
+      <div class="field"><label for="high">區間最高點 <span class="hint">（選填，用來比較）</span></label><input id="high" type="number" inputmode="decimal" step="0.01" value="49969"></div>
+      <div class="field">
+        <span class="lbl" id="mode-lbl">上漲情境</span>
+        <div class="seg" role="group" aria-labelledby="mode-lbl">
+          <button type="button" data-mode="slow" aria-pressed="true">緩步上漲</button>
+          <button type="button" data-mode="fast" aria-pressed="false">一口氣上漲</button>
+        </div>
+      </div>
+    </form>
+
+    <section class="result" aria-live="polite">
+      <div id="ok">
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <span class="target-lbl">大盤約要到（<span id="modeLabel">緩步上漲</span>）</span>
+          <div class="target-row"><span class="target" id="target">—</span><span class="unit">點</span></div>
+          <span class="tag" id="already" hidden>已經回本了</span>
+        </div>
+        <dl>
+          <div><dt>正二需上漲</dt><dd id="etfUp"></dd></div>
+          <div><dt>大盤需上漲</dt><dd id="idxUp"></dd></div>
+          <div id="highRow"><dt>較區間最高點 <span class="nowrap"><span id="highFmt"></span> 點</span></dt><dd class="vs" id="vsHigh"></dd></div>
+        </dl>
+      </div>
+      <p id="bad" hidden style="margin:0;font-size:18px;color:var(--n700)">請輸入大於 0 的成本、收盤價與大盤點數。</p>
+    </section>
+  </div>
+
+  <p class="note">緩步上漲估算採用「目前大盤點數 × √（正二成本 ÷ 正二收盤價）」。一口氣上漲假設單日漲到位：大盤漲幅 = 正二需漲幅 ÷ 2。正二每日重設槓桿，實際回本點位會受每日漲跌路徑、費用、追蹤差異影響，結果僅供參考，不構成投資建議。</p>
+</div>
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  var mode='slow';
+  var d=new Date();
+  $('today').textContent=d.getFullYear()+' 年 '+(d.getMonth()+1)+' 月 '+d.getDate()+' 日';
+  $('f').addEventListener('submit',function(e){e.preventDefault()});
+  var n0=function(v){return Math.round(v).toLocaleString('en-US')};
+  var pct=function(v){return (v*100).toFixed(2)+'%'};
+  function render(){
+    var c=parseFloat($('cost').value),p=parseFloat($('price').value),i=parseFloat($('idx').value),h=parseFloat($('high').value);
+    var valid=c>0&&p>0&&i>0;
+    $('ok').hidden=!valid;$('bad').hidden=valid;
+    if(!valid)return;
+    var ratio=c/p;
+    var mul=mode==='slow'?Math.sqrt(ratio):1+(ratio-1)/2;
+    var target=i*mul;
+    $('modeLabel').textContent=mode==='slow'?'緩步上漲':'一口氣上漲';
+    $('target').textContent=n0(target);
+    $('already').hidden=!(ratio<=1);
+    $('etfUp').textContent=pct(ratio-1);
+    $('idxUp').textContent=pct(mul-1);
+    var hasHigh=h>0;
+    $('highRow').hidden=!hasHigh;
+    if(hasHigh){var vs=target/h-1;$('highFmt').textContent=n0(h);$('vsHigh').textContent=(vs>=0?'+':'')+(vs*100).toFixed(1)+'%';}
+  }
+  ['cost','price','idx','high'].forEach(function(id){$(id).addEventListener('input',render)});
+  document.querySelectorAll('.seg button').forEach(function(b){
+    b.addEventListener('click',function(){
+      mode=b.dataset.mode;
+      document.querySelectorAll('.seg button').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false')});
+      render();
+    });
+  });
+  render();
+})();
+</script>
+</body>
+</html>
