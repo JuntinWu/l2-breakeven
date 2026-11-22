@@ -54,6 +54,7 @@ dd{margin:0;font-weight:700;font-variant-numeric:tabular-nums}
 #etfSeg button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:8px 16px;text-align:left}
 #etfSeg b{font-size:18px;font-variant-numeric:tabular-nums}
 #etfSeg small{font-size:12px;opacity:.85}
+.data-note{margin:10px 0 0;font-size:14px;color:var(--accent-800);background:var(--accent-100);display:inline-block;padding:4px 10px;border-radius:2px}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -67,6 +68,7 @@ dd{margin:0;font-weight:700;font-variant-numeric:tabular-nums}
 
   <h1>正二回本計算機</h1>
   <p class="lead">輸入你的正二成本與今天的收盤數字，算出大盤大約要漲到幾點，你的正二才會回本。</p>
+  <p class="data-note" id="dataNote" hidden></p>
 
   <div class="grid">
     <form id="f" novalidate>
@@ -79,8 +81,8 @@ dd{margin:0;font-weight:700;font-variant-numeric:tabular-nums}
         <span class="hint" id="etfHint"></span>
       </div>
       <div class="field"><label for="cost">您的 <span class="etfName">00631L</span> 成本</label><input id="cost" type="number" inputmode="decimal" step="0.01" value="41.94"></div>
-      <div class="field"><label for="price"><span class="etfName">00631L</span> 今天收盤價</label><input id="price" type="number" inputmode="decimal" step="0.01" value="21.24"></div>
-      <div class="field"><label for="idx">今日大盤收盤點數</label><input id="idx" type="number" inputmode="decimal" step="0.01" value="36033.29"></div>
+      <div class="field"><label for="price"><span class="etfName">00631L</span> 收盤價</label><input id="price" type="number" inputmode="decimal" step="0.01" value="21.24"></div>
+      <div class="field"><label for="idx">大盤收盤點數</label><input id="idx" type="number" inputmode="decimal" step="0.01" value="36033.29"></div>
       <div class="field"><label for="high">區間最高點 <span class="hint">（選填，用來比較）</span></label><input id="high" type="number" inputmode="decimal" step="0.01" value="49969"></div>
       <div class="field">
         <span class="lbl" id="mode-lbl">上漲情境</span>
@@ -166,6 +168,17 @@ dd{margin:0;font-weight:700;font-variant-numeric:tabular-nums}
     b.addEventListener('click',function(){mode=b.dataset.mode;pressSeg($('modeSeg'),b);render();});
   });
   applyEtf();
+  // 每日收盤資料（GitHub Actions 自動更新 data.json）
+  fetch('data.json',{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(d){
+    if(!d||!d.date||!d.index)return;
+    var p=d.date.split('-');
+    $('dataNote').textContent='已自動帶入 '+(+p[0])+' 年 '+(+p[1])+' 月 '+(+p[2])+' 日收盤資料（每個交易日更新）';
+    $('dataNote').hidden=false;
+    if(st.dataDate===d.date)return;
+    st.dataDate=d.date;st.idx=String(d.index);
+    Object.keys(ETFS).forEach(function(k){if(d.prices&&d.prices[k])st.vals[k].price=String(d.prices[k]);});
+    save();applyEtf();
+  }).catch(function(){});
 })();
 </script>
 </body>
