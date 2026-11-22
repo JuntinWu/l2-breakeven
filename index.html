@@ -80,7 +80,7 @@ dd{margin:0;font-weight:700;font-variant-numeric:tabular-nums}
         </div>
         <span class="hint" id="etfHint"></span>
       </div>
-      <div class="field"><label for="cost">您的 <span class="etfName">00631L</span> 成本</label><input id="cost" type="number" inputmode="decimal" step="0.01" value="41.94"></div>
+      <div class="field"><label for="cost">您的 <span class="etfName">00631L</span> 成本</label><input id="cost" type="number" inputmode="decimal" step="0.01" value="33.4"></div>
       <div class="field"><label for="price"><span class="etfName">00631L</span> 收盤價</label><input id="price" type="number" inputmode="decimal" step="0.01" value="21.24"></div>
       <div class="field"><label for="idx">大盤收盤點數</label><input id="idx" type="number" inputmode="decimal" step="0.01" value="36033.29"></div>
       <div class="field"><label for="high">區間最高點 <span class="hint">（選填，用來比較）</span></label><input id="high" type="number" inputmode="decimal" step="0.01" value="49969"></div>
@@ -138,10 +138,10 @@ dd{margin:0;font-weight:700;font-variant-numeric:tabular-nums}
     $('highRow').hidden=!hasHigh;
     if(hasHigh){var vs=target/h-1;$('highFmt').textContent=n0(h);$('vsHigh').textContent=(vs>=0?'+':'')+(vs*100).toFixed(1)+'%';}
   }
-  var KEY='l2-breakeven-v1';
+  var KEY='l2-breakeven-v2';
   var ETFS={
-    '00631L':{hint:'元大台灣50正2，追蹤臺灣50指數 2 倍；以加權指數估算為近似值。',cost:'41.94',price:'21.24'},
-    '00685L':{hint:'群益臺灣加權正2，追蹤臺灣加權指數 2 倍。',cost:'',price:''}
+    '00631L':{hint:'元大台灣50正2，追蹤臺灣50指數 2 倍；以加權指數估算為近似值。',cost:'33.4',price:'21.24'},
+    '00685L':{hint:'群益臺灣加權正2，追蹤臺灣加權指數 2 倍。',cost:'11.77',price:''}
   };
   var st={etf:'00631L',vals:{},idx:$('idx').value,high:$('high').value};
   try{var saved=JSON.parse(localStorage.getItem(KEY)||'null');if(saved)st=Object.assign(st,saved);}catch(e){}
